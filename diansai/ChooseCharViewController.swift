@@ -11,12 +11,54 @@ import CoreBluetooth
 import AudioToolbox
 
 class ChooseCharViewController: UIViewController {
+    @IBOutlet weak var pickerView: UIPickerView!
+    @IBOutlet weak var saveBtn: UIButton!
+    @IBOutlet weak var selectLabel: UIButton!
+    
+    @IBOutlet weak var writeLayer: UIView!
+    @IBOutlet weak var readLayer: UIView!
+    @IBOutlet weak var notifyLayer: UIView!
+    
+    @IBAction func saveBtn(_ sender: UIButton) {
+        switch selectLabel.title(for: UIControl.State.normal) {
+        case "发送":
+            self.writeService.text = "\(pickerView.selectedRow(inComponent: 0))"
+            if self.writeService.text! == "0" {
+                self.writeService.text = ""
+            }
+            self.writeChar.text = "\(pickerView.selectedRow(inComponent: 1))"
+            if self.writeChar.text! == "0" {
+                self.writeChar.text = ""
+            }
+        case "读取":
+            self.readService.text = "\(pickerView.selectedRow(inComponent: 0))"
+            if self.readService.text! == "0" {
+                self.readService.text = ""
+            }
+            self.readChar.text = "\(pickerView.selectedRow(inComponent: 1))"
+            if self.readChar.text == "0" {
+                self.readChar.text = ""
+            }
+        case "通知":
+            self.notifyService.text = "\(pickerView.selectedRow(inComponent: 0))"
+            if self.notifyService.text! == "0" {
+                self.notifyService.text = ""
+            }
+            self.notifyChar.text = "\(pickerView.selectedRow(inComponent: 1))"
+            if self.notifyChar.text! == "0" {
+                self.notifyChar.text = ""
+            }
+        default:
+            break
+        }
+    }
+    
+    var serviceNumbers = 0
+    var charactisticNumbers = 0
+    
     @IBAction func dismiss(_ sender: UIButton) {
-        print("Asdasd")
         self.performSegue(withIdentifier: "closeChoose", sender: nil)
 //        self.dismiss(animated: true, completion: nil)
-        
-        print("qqqqqq")
     }
     
     var writeType: CBCharacteristicWriteType?
@@ -133,6 +175,7 @@ class ChooseCharViewController: UIViewController {
     @IBOutlet weak var notifyService: UITextField!
     @IBOutlet weak var notifyChar: UITextField!
     
+    //MARK: - view delegate
     var counts = ""
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -157,6 +200,53 @@ class ChooseCharViewController: UIViewController {
         self.readChar.placeholder = counts
         self.notifyService.placeholder = "\(BlueToothCentral.services.count)"
         self.notifyChar.placeholder = counts
+        
+//        self.writeService.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+//        self.writeChar.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+//        self.readService.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+//        self.readChar.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+//        self.notifyService.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+//        self.notifyChar.addTarget(self, action: #selector(showPickViewer(_:)), for: .touchDown)
+        
+        self.serviceNumbers = BlueToothCentral.services.count
+        if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum != 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum-1]]!.count
+        }
+        if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum]]!.count
+        }
+
+//        self.pickerView.
+//        self.pickerView.reloadAllComponents()
+        self.pickerView.layer.cornerRadius = 7
+        self.pickerView.layer.borderWidth = 3
+        self.pickerView.layer.borderColor = UIColor.WWDCYellow.cgColor
+        self.selectLabel.layer.cornerRadius = 7
+        
+        self.writeService.textAlignment = .center
+        self.writeChar.textAlignment = .center
+        self.readService.textAlignment = .center
+        self.readChar.textAlignment = .center
+        self.notifyService.textAlignment = .center
+        self.notifyChar.textAlignment = .center
+        
+        self.writeLayer.layer.borderWidth = 1.5
+        self.writeLayer.layer.cornerRadius = 7
+        self.writeLayer.layer.borderColor = UIColor.clear.cgColor
+        self.readLayer.layer.borderWidth = 1.5
+        self.readLayer.layer.cornerRadius = 7
+        self.readLayer.layer.borderColor = UIColor.clear.cgColor
+        self.notifyLayer.layer.borderWidth = 1.5
+        self.notifyLayer.layer.cornerRadius = 7
+        self.notifyLayer.layer.borderColor = UIColor.clear.cgColor
+        
+        self.pickerView.delegate = self
+        self.pickerView.dataSource = self
+        
+        if self.serviceNumbers != 0 {
+            self.pickerView.selectRow(BlueToothCentral.writeServiceNum, inComponent: 0, animated: true)
+            self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
+        }
     }
     
     func showErrorAlertWithTitle(_ title: String?, message: String?) {
@@ -215,75 +305,105 @@ extension ChooseCharViewController: UITextFieldDelegate {
         return true
     }
     
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if string == "0" {
-            return false
-        }
-        let int = Int(string)
-        if string == "" || int != nil {
-            if textField == writeService {
-                if self.writeService.text?.count == 1 && string == "" {
-                    self.writeChar.placeholder = counts
-                    return true
-                }
-                
-                if let num = Int(self.writeService.text! + string), BlueToothCentral.services.count >= num {
-                    
-                    self.writeChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
-                    return true
-                }
-            } else if textField == writeChar {
-                if let num = Int(self.writeService.text!), BlueToothCentral.services.count >= num {
-                    if let num1 = Int(self.writeChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
-                        
-                        return true
-                    }
-                }
-            } else if textField == readService {
-                if self.readService.text?.count == 1 && string == "" {
-                    self.readChar.placeholder = counts
-                    return true
-                }
-                
-                if let num = Int(self.readService.text! + string), BlueToothCentral.services.count >= num {
-                    
-                    self.readChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
-                    return true
-                }
-            } else if textField == readChar {
-                if let num = Int(self.readService.text!), BlueToothCentral.services.count >= num {
-                    if let num1 = Int(self.readChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
-                        
-                        return true
-                    }
-                }
-            } else if textField == notifyService {
-                if self.notifyService.text?.count == 1 && string == "" {
-                    self.notifyChar.placeholder = counts
-                    return true
-                }
-                
-                if let num = Int(self.notifyService.text! + string), BlueToothCentral.services.count >= num {
-                    
-                    self.notifyChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
-                    return true
-                }
-            } else if textField == notifyChar {
-                if let num = Int(self.notifyService.text!), BlueToothCentral.services.count >= num {
-                    if let num1 = Int(self.notifyChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
-                        
-                        return true
-                    }
-                }
-            }
-        }
+    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        showPickView(textField)
         
-        if string == "" {
-            return true
+        
+        switch textField {
+        case writeService:
+            fallthrough
+        case writeChar:
+            self.writeLayer.layer.borderColor = UIColor.WWDCYellow.cgColor
+            self.readLayer.layer.borderColor = UIColor.clear.cgColor
+            self.notifyLayer.layer.borderColor = UIColor.clear.cgColor
+        case readService:
+            fallthrough
+        case readChar:
+            self.readLayer.layer.borderColor = UIColor.WWDCYellow.cgColor
+            self.writeLayer.layer.borderColor = UIColor.clear.cgColor
+            self.notifyLayer.layer.borderColor = UIColor.clear.cgColor
+        case notifyService:
+            fallthrough
+        case notifyChar:
+            self.notifyLayer.layer.borderColor = UIColor.WWDCYellow.cgColor
+            self.writeLayer.layer.borderColor = UIColor.clear.cgColor
+            self.readLayer.layer.borderColor = UIColor.clear.cgColor
+        default:
+            break
         }
         
         return false
     }
+    
+//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+//        if string == "0" {
+//            return false
+//        }
+//        let int = Int(string)
+//        if string == "" || int != nil {
+//            if textField == writeService {
+//                if self.writeService.text?.count == 1 && string == "" {
+//                    self.writeChar.placeholder = counts
+//                    return true
+//                }
+//
+//                if let num = Int(self.writeService.text! + string), BlueToothCentral.services.count >= num {
+//
+//                    self.writeChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
+//                    return true
+//                }
+//            } else if textField == writeChar {
+//                if let num = Int(self.writeService.text!), BlueToothCentral.services.count >= num {
+//                    if let num1 = Int(self.writeChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
+//
+//                        return true
+//                    }
+//                }
+//            } else if textField == readService {
+//                if self.readService.text?.count == 1 && string == "" {
+//                    self.readChar.placeholder = counts
+//                    return true
+//                }
+//
+//                if let num = Int(self.readService.text! + string), BlueToothCentral.services.count >= num {
+//
+//                    self.readChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
+//                    return true
+//                }
+//            } else if textField == readChar {
+//                if let num = Int(self.readService.text!), BlueToothCentral.services.count >= num {
+//                    if let num1 = Int(self.readChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
+//
+//                        return true
+//                    }
+//                }
+//            } else if textField == notifyService {
+//                if self.notifyService.text?.count == 1 && string == "" {
+//                    self.notifyChar.placeholder = counts
+//                    return true
+//                }
+//
+//                if let num = Int(self.notifyService.text! + string), BlueToothCentral.services.count >= num {
+//
+//                    self.notifyChar.placeholder = "\(BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count)"
+//                    return true
+//                }
+//            } else if textField == notifyChar {
+//                if let num = Int(self.notifyService.text!), BlueToothCentral.services.count >= num {
+//                    if let num1 = Int(self.notifyChar.text! + string), BlueToothCentral.characteristics[BlueToothCentral.services[num-1]]!.count >= num1 {
+//
+//                        return true
+//                    }
+//                }
+//            }
+//        }
+//
+//        if string == "" {
+//            return true
+//        }
+//
+//        return false
+//    }
 }
 
 extension ChooseCharViewController {
@@ -303,4 +423,118 @@ extension ChooseCharViewController {
             break
         }
     }
+}
+
+extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate {
+//    @objc func showPickViewer(_ sender: UITextField) {
+//        print(sender.placeholder)
+//    }
+    
+    @objc func showPickView(_ sender: UITextField) {
+//        print(String(describing: sender.placeholder))
+        switch sender {
+        case writeService:
+            fallthrough
+        case writeChar:
+            self.selectLabel.setTitle("发送", for: .normal)
+            if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum != 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum-1]]!.count
+            } else if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum]]!.count
+            }
+            self.pickerView.reloadComponent(1)
+            self.pickerView.selectRow(BlueToothCentral.writeServiceNum, inComponent: 0, animated: true)
+            self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
+        case readService:
+            fallthrough
+        case readChar:
+            self.selectLabel.setTitle("读取", for: .normal)
+            if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum != 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.readServiceNum-1]]!.count
+            } else if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum == 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.readServiceNum]]!.count
+            }
+            self.pickerView.reloadComponent(1)
+            self.pickerView.selectRow(BlueToothCentral.readServiceNum, inComponent: 0, animated: true)
+            self.pickerView.selectRow(BlueToothCentral.readCharNum, inComponent: 1, animated: true)
+        case notifyService:
+            fallthrough
+        case notifyChar:
+            self.selectLabel.setTitle("通知", for: .normal)
+            if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum != 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.notifyServiceNum-1]]!.count
+            } else if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum == 0 {
+                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.notifyServiceNum]]!.count
+            }
+            self.pickerView.reloadComponent(1)
+            self.pickerView.selectRow(BlueToothCentral.notifyServiceNum, inComponent: 0, animated: true)
+            self.pickerView.selectRow(BlueToothCentral.notifyCharNum, inComponent: 1, animated: true)
+        default:
+            break
+        }
+    }
+    
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 2
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        switch component {
+        case 0:
+            return self.serviceNumbers + 1
+        case 1:
+            return self.charactisticNumbers + 1
+        default:
+            break
+        }
+        
+        return 0
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        switch component {
+        case 0:
+            return "\(row)"
+        case 1:
+            return "\(row)"
+        default:
+            break
+        }
+        
+        return ""
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        if component == 0 && row == 0 {
+            self.charactisticNumbers = 0
+            self.pickerView.reloadComponent(1)
+        } else if component == 0 && self.serviceNumbers != 0 && row != 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[row-1]]!.count
+            self.pickerView.reloadComponent(1)
+            switch selectLabel.title(for: .normal) {
+            case "发送":
+                if row == BlueToothCentral.writeServiceNum {
+                    self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
+                    return
+                }
+            case "读取":
+                if row == BlueToothCentral.readServiceNum {
+                    self.pickerView.selectRow(BlueToothCentral.readCharNum, inComponent: 1, animated: true)
+                    return
+                }
+            case "通知":
+                if row == BlueToothCentral.notifyServiceNum {
+                    self.pickerView.selectRow(BlueToothCentral.notifyCharNum, inComponent: 1, animated: true)
+                    return
+                }
+            default:
+                break
+            }
+            
+            self.pickerView.selectRow(1, inComponent: 1, animated: true)
+        }
+    }
+    
+    
+    
 }
