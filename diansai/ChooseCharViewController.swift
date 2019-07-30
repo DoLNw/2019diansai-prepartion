@@ -213,7 +213,7 @@ class ChooseCharViewController: UIViewController {
             self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum-1]]!.count
         }
         if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
-            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum]]!.count
+            self.charactisticNumbers = 0
         }
 
 //        self.pickerView.
@@ -247,6 +247,32 @@ class ChooseCharViewController: UIViewController {
             self.pickerView.selectRow(BlueToothCentral.writeServiceNum, inComponent: 0, animated: true)
             self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
         }
+        
+        
+        if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum != 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum-1]]!.count
+            self.writeService.text = "\(BlueToothCentral.writeServiceNum)"
+            self.writeChar.text = "\(BlueToothCentral.writeCharNum)"
+        } else if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
+            self.charactisticNumbers = 0
+        }
+
+        if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum != 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.readServiceNum-1]]!.count
+            self.readService.text = "\(BlueToothCentral.readServiceNum)"
+            self.readChar.text = "\(BlueToothCentral.readCharNum)"
+        } else if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum == 0 {
+            self.charactisticNumbers = 0
+        }
+
+        if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum != 0 {
+            self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.notifyServiceNum-1]]!.count
+            self.notifyService.text = "\(BlueToothCentral.notifyServiceNum)"
+            self.notifyChar.text = "\(BlueToothCentral.notifyCharNum)"
+        } else if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum == 0 {
+            self.charactisticNumbers = 0
+        }
+
     }
     
     func showErrorAlertWithTitle(_ title: String?, message: String?) {
@@ -306,8 +332,8 @@ extension ChooseCharViewController: UITextFieldDelegate {
     }
     
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        AudioServicesPlaySystemSound(1519)
         showPickView(textField)
-        
         
         switch textField {
         case writeService:
@@ -439,36 +465,46 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
             self.selectLabel.setTitle("发送", for: .normal)
             if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum != 0 {
                 self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum-1]]!.count
+                self.writeService.text = "\(BlueToothCentral.writeServiceNum)"
+                self.writeChar.text = "\(BlueToothCentral.writeCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
-                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.writeServiceNum]]!.count
+                self.charactisticNumbers = 0
             }
+            
             self.pickerView.reloadComponent(1)
             self.pickerView.selectRow(BlueToothCentral.writeServiceNum, inComponent: 0, animated: true)
             self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
+            
         case readService:
             fallthrough
         case readChar:
             self.selectLabel.setTitle("读取", for: .normal)
             if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum != 0 {
                 self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.readServiceNum-1]]!.count
+                self.readService.text = "\(BlueToothCentral.readServiceNum)"
+                self.readChar.text = "\(BlueToothCentral.readCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum == 0 {
-                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.readServiceNum]]!.count
+                self.charactisticNumbers = 0
             }
             self.pickerView.reloadComponent(1)
             self.pickerView.selectRow(BlueToothCentral.readServiceNum, inComponent: 0, animated: true)
             self.pickerView.selectRow(BlueToothCentral.readCharNum, inComponent: 1, animated: true)
+            
         case notifyService:
             fallthrough
         case notifyChar:
             self.selectLabel.setTitle("通知", for: .normal)
             if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum != 0 {
                 self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.notifyServiceNum-1]]!.count
+                self.notifyService.text = "\(BlueToothCentral.notifyServiceNum)"
+                self.notifyChar.text = "\(BlueToothCentral.notifyCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum == 0 {
-                self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[BlueToothCentral.notifyServiceNum]]!.count
+                self.charactisticNumbers = 0
             }
             self.pickerView.reloadComponent(1)
             self.pickerView.selectRow(BlueToothCentral.notifyServiceNum, inComponent: 0, animated: true)
             self.pickerView.selectRow(BlueToothCentral.notifyCharNum, inComponent: 1, animated: true)
+            
         default:
             break
         }
@@ -508,23 +544,59 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
         if component == 0 && row == 0 {
             self.charactisticNumbers = 0
             self.pickerView.reloadComponent(1)
+            switch selectLabel.title(for: .normal) {
+            case "发送":
+                self.writeService.text = ""
+                self.writeChar.text = ""
+            case "读取":
+                self.readService.text = ""
+                self.readChar.text = ""
+            case "通知":
+                self.notifyService.text = ""
+                self.notifyChar.text = ""
+            default:
+                break
+            }
+        } else if component == 1 && row == 0 {
+            switch selectLabel.title(for: .normal) {
+            case "发送":
+                self.writeChar.text = ""
+            case "读取":
+                self.readChar.text = ""
+            case "通知":
+                self.notifyChar.text = ""
+            default:
+                break
+            }
         } else if component == 0 && self.serviceNumbers != 0 && row != 0 {
             self.charactisticNumbers = BlueToothCentral.characteristics[BlueToothCentral.services[row-1]]!.count
             self.pickerView.reloadComponent(1)
             switch selectLabel.title(for: .normal) {
             case "发送":
+                self.writeService.text = "\(row)"
+                self.writeChar.text = "\(1)"
                 if row == BlueToothCentral.writeServiceNum {
                     self.pickerView.selectRow(BlueToothCentral.writeCharNum, inComponent: 1, animated: true)
+                    self.writeService.text = "\(BlueToothCentral.writeServiceNum)"
+                    self.writeChar.text = "\(BlueToothCentral.writeCharNum)"
                     return
                 }
             case "读取":
+                self.readService.text = "\(row)"
+                self.readChar.text = "\(1)"
                 if row == BlueToothCentral.readServiceNum {
                     self.pickerView.selectRow(BlueToothCentral.readCharNum, inComponent: 1, animated: true)
+                    self.readService.text = "\(BlueToothCentral.readServiceNum)"
+                    self.readChar.text = "\(BlueToothCentral.readCharNum)"
                     return
                 }
             case "通知":
+                self.notifyService.text = "\(row)"
+                self.notifyChar.text = "\(1)"
                 if row == BlueToothCentral.notifyServiceNum {
                     self.pickerView.selectRow(BlueToothCentral.notifyCharNum, inComponent: 1, animated: true)
+                    self.notifyService.text = "\(BlueToothCentral.notifyServiceNum)"
+                    self.notifyChar.text = "\(BlueToothCentral.notifyCharNum)"
                     return
                 }
             default:
@@ -532,9 +604,17 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
             }
             
             self.pickerView.selectRow(1, inComponent: 1, animated: true)
+        } else if component == 1 {
+            switch selectLabel.title(for: .normal) {
+            case "发送":
+                self.writeChar.text = "\(row)"
+            case "读取":
+                self.readChar.text = "\(row)"
+            case "通知":
+                self.notifyChar.text = "\(row)"
+            default:
+                break
+            }
         }
     }
-    
-    
-    
 }

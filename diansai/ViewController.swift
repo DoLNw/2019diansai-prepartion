@@ -33,13 +33,13 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var titleLabel: UILabel!
     @IBAction func chooseChartistic(_ sender: Any) {
-        AudioServicesPlaySystemSound(1519)
+//        AudioServicesPlaySystemSound(1519)
         
         self.performSegue(withIdentifier: "goToChoose", sender: nil)
     }
     @IBOutlet weak var editBtn: UIButton!
     @IBAction func chooseCharBtnAct(_ sender: Any) {
-        AudioServicesPlaySystemSound(1519)
+//        AudioServicesPlaySystemSound(1519)
         
         self.performSegue(withIdentifier: "goToChoose", sender: nil)
     }
