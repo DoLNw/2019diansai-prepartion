@@ -469,6 +469,8 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
                 self.writeChar.text = "\(BlueToothCentral.writeCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.writeServiceNum == 0 {
                 self.charactisticNumbers = 0
+//                self.writeService.text = ""
+//                self.writeChar.text = ""
             }
             
             self.pickerView.reloadComponent(1)
@@ -485,6 +487,8 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
                 self.readChar.text = "\(BlueToothCentral.readCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.readServiceNum == 0 {
                 self.charactisticNumbers = 0
+//                self.readService.text = ""
+//                self.readChar.text = ""
             }
             self.pickerView.reloadComponent(1)
             self.pickerView.selectRow(BlueToothCentral.readServiceNum, inComponent: 0, animated: true)
@@ -500,6 +504,8 @@ extension ChooseCharViewController: UIPickerViewDataSource, UIPickerViewDelegate
                 self.notifyChar.text = "\(BlueToothCentral.notifyCharNum)"
             } else if self.serviceNumbers != 0 && BlueToothCentral.notifyServiceNum == 0 {
                 self.charactisticNumbers = 0
+//                self.notifyService.text = ""
+//                self.notifyChar.text = ""
             }
             self.pickerView.reloadComponent(1)
             self.pickerView.selectRow(BlueToothCentral.notifyServiceNum, inComponent: 0, animated: true)
