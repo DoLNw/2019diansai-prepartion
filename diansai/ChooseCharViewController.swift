@@ -332,7 +332,7 @@ extension ChooseCharViewController: UITextFieldDelegate {
     }
     
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        AudioServicesPlaySystemSound(1519)
+//        AudioServicesPlaySystemSound(1519)
         showPickView(textField)
         
         switch textField {

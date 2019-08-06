@@ -29,22 +29,23 @@ enum ShowType: String {
 }
 
 class ViewController: UIViewController {
+    var elements = [Element]()
+    
+    @IBOutlet weak var scrollView: UIScrollView!
+    var scrollViewOffsetY: CGFloat = 0
+    
     var showType: ShowType = .normal
     
     @IBOutlet weak var titleLabel: UILabel!
-    @IBAction func chooseChartistic(_ sender: Any) {
-//        AudioServicesPlaySystemSound(1519)
-        
-        self.performSegue(withIdentifier: "goToChoose", sender: nil)
-    }
     @IBOutlet weak var editBtn: UIButton!
     @IBAction func chooseCharBtnAct(_ sender: Any) {
-//        AudioServicesPlaySystemSound(1519)
+        AudioServicesPlaySystemSound(1519)
         
         self.performSegue(withIdentifier: "goToChoose", sender: nil)
     }
     
     @IBOutlet weak var visualEffectView: UIVisualEffectView!
+    @IBOutlet weak var visiualShadowView: UIView!
     
     let blueToothCentral = BlueToothCentral()
     
@@ -84,12 +85,19 @@ class ViewController: UIViewController {
     @IBOutlet weak var refTextField: UITextField!
     @IBOutlet weak var ctrlTextField: UITextField!
     
+    @IBOutlet weak var page4View: UIView!
+    @IBOutlet weak var page4ShadowView: UIView!
+    
+    
     @IBOutlet weak var disConnectBtn: UIButton!
     @IBOutlet weak var connectBtn: UIButton!
     
     //MARK: - Override Methods
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        fetchValue()
+        
         self.title = "UnConnected"
         self.titleLabel.text = "UnConnected"
         
@@ -117,6 +125,7 @@ class ViewController: UIViewController {
         page1shadowView.backgroundColor = .WWDCYellow
         page2ShadowView.backgroundColor = .WWDCGreen
         page3ShadowView.backgroundColor = .CaliforniaCondorColor
+        page4ShadowView.backgroundColor = .monkeyColor
         
         self.freqTextField.delegate = self
         self.setUTextFueld.delegate = self
@@ -141,7 +150,24 @@ class ViewController: UIViewController {
         self.page3View.layer.shadowRadius = 5
         self.page3View.layer.shadowOpacity = 0.35
         self.page3View.layer.shadowColor = UIColor.black.cgColor
-//        self.page2ShadowView.layer.masksToBounds = true
+        
+        self.page4View.layer.shadowOffset = CGSize(width: 4, height: 4)
+        self.page4View.layer.shadowRadius = 5
+        self.page4View.layer.shadowOpacity = 0.35
+        self.page4View.layer.shadowColor = UIColor.black.cgColor
+        
+//      https://www.jb51.net/article/126194.htm
+        self.visiualShadowView.layer.cornerRadius = 10
+        self.visiualShadowView.layer.shadowOffset = CGSize(width: 4, height: 4)
+        self.visiualShadowView.layer.shadowRadius = 5
+        self.visiualShadowView.layer.shadowOpacity = 0.35
+        self.visiualShadowView.layer.shadowColor = UIColor.black.cgColor
+//        self.visualEffectView.clipsToBounds = false
+//
+        self.visualEffectView.layer.cornerRadius = 10
+        self.visualEffectView.layer.masksToBounds = true
+        
+        self.scrollView.delegate = self
  
     }
     
@@ -380,58 +406,78 @@ extension ViewController: CBCentralManagerDelegate, CBPeripheralDelegate {
             }
             
             values = dataInt.joined(separator: "")
+//            print(values)
             allStr += values
 
             if values.hasSuffix("\n") {
+                //接收数据的时候如果那边一下子发过来很多，每次收到固定的数据就会回调这个函数，然后就会一大串数字被截断的，我以\n为标识符，表示一大串数据结束，进行处理
+                values.removeLast()
+                
                 let splites = allStr.components(separatedBy: "@@")
                 
                 DispatchQueue.main.async { [unowned self] in
                     for splite in splites {
                         var temp = splite
-                        if splite.hasPrefix("out") {
-                            for _ in 0 ..< 3 { temp.removeFirst() }
-                            self.outLabel.text = temp
-                        }else if splite.hasPrefix("lock") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
+                        if splite.hasPrefix("outt") {
+                            for _ in 0 ..< 5 { temp.removeFirst() }
+                            if let float = Int(temp) {
+                                self.outLabel.text = "\(float/1000)"
+                            }
+                        } else if splite.hasPrefix("lock") {
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             if !self.lockTextField.isFirstResponder {
                                 self.lockTextField.text = temp
                             }
-                        } else if splite.hasPrefix("ref") {
-                            for _ in 0 ..< 3 { temp.removeFirst() }
+                        } else if splite.hasPrefix("reff") {
+                            for _ in 0 ..< 5 { temp.removeFirst() }
+                            // 这句话是保证在编辑的时候不会被发送过来的数据马上改变数值，但是也没有缓存这个数据
                             if !self.refTextField.isFirstResponder {
-                                self.refTextField.text = temp
+                                //这是因为发送过来的数据都是按照整数字符串发送，所以要变回小数
+                                if let float = Int(temp) {
+                                    self.outLabel.text = "\(float/1000)"
+                                }
                             }
                         } else if splite.hasPrefix("irms") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
-                            self.irmsLabel.text = temp
+                            for _ in 0 ..< 5 { temp.removeFirst() }
+                            if let float = Int(temp) {
+                                self.outLabel.text = "\(float/1000)"
+                            }
                         } else if splite.hasPrefix("ctrl") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             if !self.ctrlTextField.isFirstResponder {
                                 self.ctrlTextField.text = temp
                             }
                         } else if splite.hasPrefix("urms") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
-                            self.urmsLabel.text = temp
-                        } else if splite.hasPrefix("calendar") {
-                            for _ in 0 ..< 8 { temp.removeFirst() }
+                            for _ in 0 ..< 5 { temp.removeFirst() }
+                            if let float = Int(temp) {
+                                self.outLabel.text = "\(float/100)"
+                            }
+                        } else if splite.hasPrefix("cale") {
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             self.timeLabel.text = temp
                         } else if splite.hasPrefix("time") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             self.timeLabel.text = self.timeLabel.text! + "  " + temp
                         } else if splite.hasPrefix("freq") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             if !self.freqTextField.isFirstResponder {
-                                self.freqTextField.text = temp
+                                if let float = Int(temp) {
+                                    self.outLabel.text = "\(float/100)"
+                                }
                             }
-                        } else if splite.hasPrefix("average") {
-                            for _ in 0 ..< 7 { temp.removeFirst() }
+                        } else if splite.hasPrefix("aver") {
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             self.averageLabel.text = temp
                         } else if splite.hasPrefix("uset") {
-                            for _ in 0 ..< 4 { temp.removeFirst() }
+                            for _ in 0 ..< 5 { temp.removeFirst() }
                             if !self.setUTextFueld.isFirstResponder {
-                                self.setUTextFueld.text = temp
+                                if let float = Int(temp) {
+                                    self.outLabel.text = "\(float/10)"
+                                }
                             }
                         }
+                        
+//                        print(temp)
                     }
                 }
                 
@@ -482,7 +528,7 @@ extension ViewController: UITextFieldDelegate, UIGestureRecognizerDelegate, UITe
                 let freqInt = Int(freqDouble*100)
                 
                 if BlueToothCentral.writeType != nil {
-                    BlueToothCentral.peripheral.writeValue(("freq\0" + String(freqInt)).data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
+                    BlueToothCentral.peripheral.writeValue(("@@freq\0" + String(freqInt) + "\n").data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
                 }
             }
             
@@ -498,14 +544,14 @@ extension ViewController: UITextFieldDelegate, UIGestureRecognizerDelegate, UITe
                 
                 //接收到的对应的是uset
                 if BlueToothCentral.writeType != nil {
-                    BlueToothCentral.peripheral.writeValue(("voltage\0" + String(uInt)).data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
+                    BlueToothCentral.peripheral.writeValue(("@@uset\0" + String(uInt) + "\n").data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
                 }
             }
             
         case self.lockTextField:
             if let lockInt = Int(self.lockTextField.text!) {
                 if BlueToothCentral.writeType != nil {
-                    BlueToothCentral.peripheral.writeValue(("lock\0" + String(lockInt)).data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
+                    BlueToothCentral.peripheral.writeValue(("@@lock\0" + String(lockInt) + "\n").data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
                 }
             }
             
@@ -520,7 +566,7 @@ extension ViewController: UITextFieldDelegate, UIGestureRecognizerDelegate, UITe
                 let refInt = Int(refDouble*1000)
                 
                 if BlueToothCentral.writeType != nil {
-                    BlueToothCentral.peripheral.writeValue(("ref\0" + String(refInt)).data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
+                    BlueToothCentral.peripheral.writeValue(("@@reff\0" + String(refInt) + "\n").data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
                 }
             }
             
@@ -528,7 +574,7 @@ extension ViewController: UITextFieldDelegate, UIGestureRecognizerDelegate, UITe
             if let ctrlInt = Int(self.ctrlTextField.text!) {
                 
                 if BlueToothCentral.writeType != nil {
-                    BlueToothCentral.peripheral.writeValue(("ctrl\0" + String(ctrlInt)).data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
+                    BlueToothCentral.peripheral.writeValue(("@@ctrl\0" + String(ctrlInt) + "\n").data(using: .utf8)!, for: BlueToothCentral.characteristic, type: BlueToothCentral.writeType)
                 }
             }
             
@@ -638,7 +684,7 @@ extension ViewController {
         connectBtn.setTitle("ScanPer", for: .highlighted)
         connectBtn.setTitleColor(UIColor.white, for: .normal)
         connectBtn.setTitleColor(UIColor.red, for: .highlighted)
-        visualEffectView.contentView.addSubview(connectBtn) //必须添加到contentView
+//        visualEffectView.contentView.addSubview(connectBtn) //必须添加到contentView
         
         disConnectBtn.addTarget(self, action: #selector(blueBtnMethod(_:)), for: .touchUpInside)
         disConnectBtn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
@@ -648,7 +694,7 @@ extension ViewController {
         disConnectBtn.setTitle("Discont", for: .highlighted)
         disConnectBtn.setTitleColor(UIColor.red, for: .normal)
         disConnectBtn.setTitleColor(UIColor.red, for: .highlighted)
-        visualEffectView.contentView.addSubview(disConnectBtn) //必须添加到contentView
+//        visualEffectView.contentView.addSubview(disConnectBtn) //必须添加到contentView
         
     }
 }
@@ -788,15 +834,16 @@ extension ViewController {
                 selectedTextField = textField!
             }
         }
-        let textMaxY = selectedTextField.superview!.frame.origin.y + selectedTextField.frame.maxY // 取到输入框的最大的y坐标值
+        //现在因为我这个textfield在uiview里面，uiview在scrollview里面，所以要做一些坐标的相加运算
+        let textMaxY = scrollView.frame.origin.y + selectedTextField.superview!.frame.origin.y + selectedTextField.frame.maxY - scrollViewOffsetY // 取到输入框的最大的y坐标值
         
         let userinfo: NSDictionary = notification.userInfo! as NSDictionary
         let nsValue:AnyObject? = userinfo.object(forKey: UIResponder.keyboardFrameEndUserInfoKey) as AnyObject?
         let keyboardY = nsValue?.cgRectValue.origin.y  //取到键盘的y坐标
-        
-        
+
+
         let duration = 2.0
-        
+
         UIView.animate(withDuration: duration) { () -> Void in
             if (textMaxY > keyboardY!) {
                 self.view.transform = CGAffineTransform(translationX: 0, y: keyboardY! - textMaxY - 20)
@@ -820,5 +867,72 @@ extension ViewController {
 //    }
 }
 
+extension ViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        scrollViewOffsetY = scrollView.contentOffset.y
+    }
+}
 
-
+//MARK: - userdefaults存储
+extension ViewController {
+    func fetchValue() {
+    let user = UserDefaults.standard
+        
+    if let propertylistmenbers = user.array(forKey: "elements") as? [[String:String]] {
+        for menber in propertylistmenbers {
+            elements.append(Element(sysType: SysType(rawValue: menber["sysType"]!), property: Charactistic(rawValue: menber["property"]!), displayName: menber["displayName"], sendPrefix: menber["sendPrefix"], receivePrefix: menber["receivePrefix"]))
+        }
+        
+//        print("already saved")
+        return
+    }
+        
+//    print("save now")
+    for i in 0..<10 {
+        switch i {
+        case 0:
+            let timeElement = Element(sysType: .system, property: .read, displayName: "Time", sendPrefix: nil, receivePrefix: "time")
+            elements.append(timeElement)
+        case 1:
+            let freqElement = Element(sysType: .system, property: .readAndWrite, displayName: "F   ", sendPrefix: "freq", receivePrefix: "freq")
+            elements.append(freqElement)
+        case 2:
+            let usetElement = Element(sysType: .system, property: .readAndWrite, displayName: "S   ", sendPrefix: "uset", receivePrefix: "uset")
+            elements.append(usetElement)
+        case 3:
+            let outElement = Element(sysType: .system, property: .read, displayName: "O   ", sendPrefix: nil, receivePrefix: "out")
+            elements.append(outElement)
+        case 4:
+            let averageElement = Element(sysType: .system, property: .read, displayName: "A   ", sendPrefix: nil, receivePrefix: "average")
+            elements.append(averageElement)
+        case 5:
+            let urmsElement = Element(sysType: .system, property: .read, displayName: "U   ", sendPrefix: nil, receivePrefix: "urms")
+            elements.append(urmsElement)
+        case 6:
+            let urmsElement = Element(sysType: .system, property: .read, displayName: "I   ", sendPrefix: nil, receivePrefix: "irms")
+            elements.append(urmsElement)
+        case 7:
+            let lockElement = Element(sysType: .system, property: .readAndWrite, displayName: "Lock", sendPrefix: "lock", receivePrefix: "lock")
+            elements.append(lockElement)
+        case 8:
+            let refElement = Element(sysType: .system, property: .readAndWrite, displayName: "Ref ", sendPrefix: "ref", receivePrefix: "ref")
+            elements.append(refElement)
+        case 9:
+            let ctrlElement = Element(sysType: .system, property: .readAndWrite, displayName: "Ctrl", sendPrefix: "ctrl", receivePrefix: "ctrl")
+            elements.append(ctrlElement)
+        default:
+            break
+        }
+    }
+    
+    let propertylistmenbers = elements.map{ $0.propertyListRepresentation }
+    user.set(propertylistmenbers, forKey: "elements")
+    
+    //想要用Codable， NSSercuingCoding直接存储一个结构体或者类，但是我失败了🤦‍♂️
+//        for (index, element) in (elements?.enumerated())! {
+//            let encodeData = NSKeyedArchiver.archivedData(withRootObject: element)
+//            user.set(encodeData, forKey: "element\(index)")
+//        }
+//        user.set(elements, forKey: "elements") //Attempt to set a non-property-list object
+    }
+}
